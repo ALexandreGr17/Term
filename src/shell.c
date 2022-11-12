@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "tokens.h"
 
 
 #define ASH_RL_BUFFERSIZE  1024
@@ -31,6 +31,15 @@ int (*builtin_func[]) (char **) = {
 };
 
 
+void green()
+{
+	printf("\033[0;32m");
+}
+
+void reset()
+{
+	printf("\033[0m");
+}
 
 
 char* ash_read_line(void){
@@ -107,12 +116,13 @@ int ash_launch(char** args){
 	pid = fork();
 	if(pid == 0){
 		if(execvp(args[0], args) == -1){
-			perror("ash");
+			printf("ash: command not found\n");
 		}
 		exit(EXIT_FAILURE);
 	}
 
 	else if(pid < 0){
+		printf("ash: command not found\n");
 		perror("ash");
 	}
 	else{
@@ -184,7 +194,9 @@ void ash_loop(void){
 	int status;
 
 	do{
+		green();
 		printf("%s\n", pathAbs);
+		reset();
 		printf("	->");
 		line = ash_read_line();
 		args = ash_split_line(line);
