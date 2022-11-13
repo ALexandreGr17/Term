@@ -3,12 +3,12 @@
 #include "tokens.h"
 
 typedef struct Token Token;
-struct Token{
-	char* type;
-	char* opt;
-	char* val;
-};
 
+struct Token{
+	char* type;/*type of the token*/
+	char* val;/*value of the token*/
+};
+/*split line with th separation char ": ;"*/
 char** conf_read_line(char* a, int size){
 	int bufsize = 10;
 	char* buffer = malloc(bufsize * sizeof(char));
