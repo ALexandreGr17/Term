@@ -13,8 +13,21 @@
 #define ASHRC_BUFFERSIZE 1024 /*size of the buffer in get_conf_file*/
 
 
-char* pathAbs; /*path of the curent file*/
+typedef struct Token Token;
+typedef struct tuple tuple;
+struct tuple{
+	char* buffer;
+	int bufsize;
+};
+struct Token{
+	char* type;
+	char* val;
+};
 
+
+
+char* pathAbs; /*path of the curent file*/
+char* color_path;
 /*declaration of the builtin fonction*/
 int ash_cd(char **args);
 int ash_help(char **args);
@@ -36,9 +49,17 @@ int (*builtin_func[]) (char **) = {
 };
 
 
-void green()
+void pathColor(char* color)
 {
-	printf("\033[0;32m");
+	if(strcmp(" GREEN", color) == 0){
+		printf("\033[0;32m");
+	}
+	else if(strcmp(" BLUE", color) == 0){
+		printf("\033[0;34m");
+	}
+	else if(strcmp(" RED", color)== 0){
+		printf("\033[0;31m");
+	}
 }
 
 void reset()
@@ -210,7 +231,7 @@ void ash_loop(void){
 	int status;
 
 	do{
-		green();/*change color of the curent directorie*/
+		pathColor(color_path);/*change color of the curent directorie*/
 		printf("%s\n", pathAbs);
 		reset();
 		printf("	->");
@@ -226,7 +247,7 @@ void ash_loop(void){
 
 
 /*read config file*/
-char* get_conf_file(void){
+tuple* get_conf_file(void){
 	int bufersize =  ASHRC_BUFFERSIZE;/*size of the buffer*/
 	char* buffer = malloc(bufersize * sizeof(char));
 	int position = 0;
@@ -254,17 +275,31 @@ char* get_conf_file(void){
 				
 			}
 		}/*if the file is found return the buffer*/
-		return buffer;
+		tuple *tu = malloc(sizeof(*tu));
+		tu->buffer = buffer;
+		tu->bufsize = position-1;
+		return tu;
 	}/*if the file isn't found return NULL*/
 	return NULL;
 }
 
+
+
+
+void ash_init(void){
+	tuple* config = get_conf_file();
+	char** block_conf = conf_read_line(config->buffer, config->bufsize);
+	Token** tokens = lexer(block_conf, 2);
+	color_path = tokens[1]->val;
+
+
+}
+
+
+
 int main(void)
 {
-	char* test = get_conf_file();
-	if(test != NULL){
-		printf("%s\n", test);
-	}
+	ash_init();
 	pathAbs = malloc(1024 * sizeof(char));
 	getcwd(pathAbs, 1024);
 	ash_loop();

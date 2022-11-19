@@ -2,7 +2,7 @@ CC=gcc
 WFLAGS=-Wall -Wextra -std=c99
 
 a.out: shell.c
-	$(CC) $(WFLAGS) shell.c -o ash
+	$(CC) $(WFLAGS) *.c -o ash
 
 all.o:
 	$(CC) $(WFLAGS) -c *.c
