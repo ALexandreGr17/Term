@@ -13,6 +13,7 @@
 #define ASHRC_BUFFERSIZE 1024 /*size of the buffer in get_conf_file*/
 
 
+typedef struct tuple2 tuple2;
 typedef struct Token Token;
 typedef struct tuple tuple;
 struct tuple{
@@ -24,16 +25,26 @@ struct Token{
 	char* val;
 };
 
+struct tuple2{
+	tuple** lines;
+	int size;
+};
+
 
 
 char* pathAbs; /*path of the curent file*/
 char* color_path;
+char* color_Answer;
+char* commandChar = ">";
 /*declaration of the builtin fonction*/
 int ash_cd(char **args);
 int ash_help(char **args);
 int ash_exit(char **args);
 
 
+void change_PathColor(char* color);
+void change_AnswerColor(char* color);
+void change_CommandLine(char* car);
 /*name of the builtin fonction*/
 char *builtin_str[] = {
 	"cd",
@@ -49,7 +60,19 @@ int (*builtin_func[]) (char **) = {
 };
 
 
-void pathColor(char* color)
+char *conf_str[] = {
+	"PathColor",
+	"AnswerColor",
+	"CommandLine"
+};
+
+void (*conf_func[]) (char*) = {
+	&change_PathColor,
+	&change_AnswerColor,
+	&change_CommandLine
+};
+
+void Color(char* color)
 {
 	if(strcmp(" GREEN", color) == 0){
 		printf("\033[0;32m");
@@ -61,6 +84,19 @@ void pathColor(char* color)
 		printf("\033[0;31m");
 	}
 }
+
+void change_PathColor(char* color){
+	color_path = color;
+}
+
+void change_AnswerColor(char* color){
+	color_Answer = color;
+}
+
+void change_CommandLine(char* car){
+	commandChar = car;
+}
+
 
 void reset()
 {
@@ -165,7 +201,7 @@ int ash_launch(char** args){
 	else{/*if parrent wait child*/
 		do{
 			wpid = waitpid(pid, &status, WUNTRACED);
-		}while(!WIFEXITED(status) && !WIFSIGNALED(status));
+	}while(!WIFEXITED(status) && !WIFSIGNALED(status));
 	}
 	return 1;
 }
@@ -231,10 +267,11 @@ void ash_loop(void){
 	int status;
 
 	do{
-		pathColor(color_path);/*change color of the curent directorie*/
+		Color(color_path);/*change color of the curent directorie*/
 		printf("%s\n", pathAbs);
 		reset();
-		printf("	->");
+		printf("	%s",commandChar);
+		Color(color_Answer);
 		line = ash_read_line();
 		args = ash_split_line(line);
 		status = ash_execute(args);
@@ -244,6 +281,56 @@ void ash_loop(void){
 	}while(status);
 }
 
+tuple2* split_line_config(char* config, int size){
+	int bufersize = ASHRC_BUFFERSIZE;
+	int linessize = 1;
+	char* buffer = malloc(sizeof(char) * bufersize);
+	tuple** lines = malloc(sizeof(tuple) * linessize);
+	int position = 0;
+	int lineNb = 0;
+
+	for(int i = 0; i < size; i++){
+		if(config[i] == '\n' || i+1 == size){
+			tuple *line = malloc(sizeof(*line));
+			line->buffer = malloc(sizeof(char) * position);
+			for(int j = 0; j <= position; j++){
+				line->buffer[j] = buffer[j];
+				buffer[j] = '\0';
+			}
+			line->bufsize = position;
+			position = 0;
+			lines[lineNb] = line;
+			lineNb++;
+			if(lineNb >= linessize){
+				linessize++;
+				lines = realloc(lines, linessize * sizeof(tuple));
+				if(!lines){
+					fprintf(stderr, "ash split line : allocation error");
+					exit(EXIT_FAILURE);
+				}
+			}
+
+		}
+		else{
+			buffer[position] = config[i];
+			position++;
+
+			if(position >= bufersize){
+				bufersize += ASHRC_BUFFERSIZE;
+				buffer = realloc(buffer, bufersize * sizeof(char));
+
+				if(!buffer){
+					fprintf(stderr, "ash split line : reallocation error");
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+	}
+	tuple2* alLines = malloc(sizeof(*alLines));
+	alLines->lines = lines;
+	alLines->size = lineNb;
+	return alLines;
+}
 
 
 /*read config file*/
@@ -266,7 +353,7 @@ tuple* get_conf_file(void){
 
 			/*resizing the buffer if needed*/
 			if(position >= bufersize){
-				bufersize *= ASHRC_BUFFERSIZE;
+				bufersize += ASHRC_BUFFERSIZE;
 				buffer = realloc(buffer, bufersize * sizeof(char));
 				if(!buffer){
 					fprintf(stderr, "ash read conf : allocation error");
@@ -288,11 +375,18 @@ tuple* get_conf_file(void){
 
 void ash_init(void){
 	tuple* config = get_conf_file();
-	char** block_conf = conf_read_line(config->buffer, config->bufsize);
-	Token** tokens = lexer(block_conf, 2);
-	color_path = tokens[1]->val;
-
-
+	tuple2* lines = split_line_config(config->buffer, config->bufsize+1);
+	for(int i = 0; i < lines->size; i++){
+		char** block_conf = conf_read_line(lines->lines[i]->buffer, lines->lines[i]->bufsize);
+		Token** tokens = lexer(block_conf, 2);
+		for(int j = 0;  j < sizeof(conf_str)/sizeof(conf_str[0]); j++){
+			//printf("%s : %s\n", tokens[0]->val, conf_str[j]);
+			if(strcmp(tokens[0]->val, conf_str[j]) == 0){
+			//	printf("here %s\n", conf_str[j]);
+				conf_func[j](tokens[1]->val);
+			}
+		}
+	}
 }
 
 

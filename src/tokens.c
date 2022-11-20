@@ -20,8 +20,7 @@ char** conf_read_line(char* a, int size){
 		fprintf(stderr, "ash lexer: allocation probleme");
 		exit(EXIT_FAILURE);
 	}
-
-	if(a[size-1] != ';'){
+	if(a[size-1] != ';' && a[size] != ';' && a[size-2] != ';'){
 		fprintf(stderr, "ash config: statement must end with ;");
 		exit(EXIT_FAILURE);
 	}
@@ -29,7 +28,7 @@ char** conf_read_line(char* a, int size){
 	for(int i = 0; i < size; i++){
 		if(a[i] == ':' || a[i] == ';'){
 			block[bpos] = malloc(10 * sizeof(char));
-			for(int j = 0; j < 10; j++){
+			for(int j = 0; j < pos; j++){
 				block[bpos][j] = buffer[j];
 				buffer[j] = '\0';
 			}
