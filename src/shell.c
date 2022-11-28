@@ -107,11 +107,12 @@ void reset()
 
 
 /*read and return command line*/
-char* ash_read_line(void){
+tuple* ash_read_line(void){
 	int buffsize = ASH_RL_BUFFERSIZE; /*size of the buffer*/
 	int pos = 0;
 	char* buffer = malloc(sizeof(char) * buffsize);
 	int c;
+	tuple* t = malloc(sizeof(*t));
 
 	/*if the buffer dosen't exist*/
 	if(!buffer){
@@ -127,7 +128,9 @@ char* ash_read_line(void){
 		/*stop the loop when end of the line*/
 		if(c == EOF || c == '\n'){
 			buffer[pos] = '\0';
-			return buffer;
+			t->buffer = buffer;
+			t->bufsize = pos;
+			return t;
 		}
 		else{
 			buffer[pos] = c; /*stock the line in the buffer*/
@@ -147,11 +150,16 @@ char* ash_read_line(void){
 }
 
 /*parse the command line*/
-char** ash_split_line(char *line){
+char** ash_split_line(char *line, int size){
 	int buffsize = ASH_TOK_BUFFERSIZE; /*size of the buffer*/
+	int tokenSize = ASH_TOK_BUFFERSIZE;
+	int linesNb = 2;
+	char*** all_lines = malloc(sizeof(char**) * linesNb);
 	char** tokens = malloc(sizeof(char*) * buffsize);
-	char* token;
+	char* token = malloc(sizeof(char) * tokenSize);
 	int pos = 0;
+	int bpos = 0;
+	int cpos = 0;
 
 	/*if the buffer dosen't exist*/
 	if(!tokens){
@@ -159,26 +167,70 @@ char** ash_split_line(char *line){
 		exit(EXIT_FAILURE);
 	}
 
-	/*creating the first token with the delimitation*/
-	token = strtok(line, ASH_TOK_DELIM);
-	while(token != NULL){
-		tokens[pos] = token;
-		pos++;
+	int i = 0;
+	while(i < size){
+		printf("%c  %i    %i\n", line[i], i, size);
+		if(line[i] == ';'){
+			for(int j = 0; j < bpos; j++){
+				all_lines[cpos][j] = tokens[j];
+			}
+			free(tokens);
+			cpos++;
+			bpos = 0;
+			pos = 0;
 
-		/*resizing the buffer if needed*/
-		if(pos >= buffsize){
-			buffsize += ASH_TOK_BUFFERSIZE;
-			tokens = realloc(tokens, buffsize * sizeof(char *));
-			if(!tokens){
-				fprintf(stderr, "ash split line: reallocation error\n");
-				exit(EXIT_FAILURE);
+			if(cpos >= linesNb){
+				linesNb++;
+				all_lines = realloc(all_lines, linesNb);
+				if(!all_lines){
+					fprintf(stderr, "ash split line : reallocation error\n");
+				}
 			}
 		}
-		/*create the next token*/
-		token = strtok(NULL, ASH_TOK_DELIM);
+
+		if(line[i] == ' '){
+			if(pos >= 1){
+				for(int j = 0; j < pos; j++){
+					tokens[bpos][j] = token[j];
+				}
+				free(token);
+				bpos++;
+				pos = 0;
+
+				if(bpos > buffsize){
+					buffsize *=2;
+					tokens = realloc(tokens, buffsize);
+					if(!tokens){
+						fprintf(stderr, "ash split line: reallocatipon error\n");
+					}
+				}
+			}
+		}
+
+		token[pos] = line[i];
+		i++;
+		pos++;
+		if(pos >= tokenSize){
+		       tokenSize*=2;
+			token = realloc(token, tokenSize);
+			if(!token){
+				fprintf(stderr, "ash split line: reallocation error\n");
+			}
+	 	}	
+
 	}
-	tokens[pos] = NULL;
-	return tokens;
+	printf("%i, %i\n", pos, bpos);
+	for(int j = 0; j < pos; j++){
+		printf("%i, %i, %i", j, pos, bpos);
+		tokens[bpos][j] = token[j];
+	}
+	printf("%s\n", tokens[0]);
+	free(token);
+	for(int i = 0; i < bpos; i++){
+	       all_lines[cpos][i] = tokens[cpos];
+	}	       
+	printf("%s\n", all_lines[0][0]);
+	return all_lines[0];
 }
 
 
@@ -239,7 +291,7 @@ int ash_help(char** args){
 	return 1;
 }
 /*exit function*/
-int ash_exit(char** args){ return 1;}
+int ash_exit(char** args){ exit(EXIT_SUCCESS);}
 
 
 
@@ -262,7 +314,7 @@ int ash_execute(char** args){
 
 /*get the command pars it and execute it*/
 void ash_loop(void){
-	char *line;
+	tuple *line;
 	char** args;
 	int status;
 
@@ -270,10 +322,10 @@ void ash_loop(void){
 		Color(color_path);/*change color of the curent directorie*/
 		printf("%s\n", pathAbs);
 		reset();
-		printf("	%s",commandChar);
 		Color(color_Answer);
+		printf("	%s",commandChar);
 		line = ash_read_line();
-		args = ash_split_line(line);
+		args = ash_split_line(line->buffer, line->bufsize);
 		status = ash_execute(args);
 
 		free(line);

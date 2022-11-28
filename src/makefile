@@ -1,8 +1,8 @@
 CC=gcc
-WFLAGS=-Wall -Wextra -std=c99
+WFLAGS=-Wall -Wextra -std=c++17
 
 a.out: shell.c
-	$(CC) $(WFLAGS) *.c -o ash
+	$(CC) $(WFLAGS) *.cpp -o ash -lstdc++
 
 all.o:
 	$(CC) $(WFLAGS) -c *.c
