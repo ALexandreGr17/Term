@@ -239,6 +239,7 @@ int ash_launch(char** args){
 	pid_t pid, wpid;
 	int status;
 	pid = fork();/*get pid*/
+        printf("%i", pid);
 	if(pid == 0){ /*it child the execute the command*/
 		if(execvp(args[0], args) == -1){
 			printf("ash: command not found\n");
