@@ -7,16 +7,31 @@
 #include <stdio.h>
 #include <string.h>
 #include "utils.h"
+#include "config.h"
 
+
+
+struct Token{
+    char* type;
+    char* val;
+};
 
 void ash_loop(void);
 
+//builtin func
 int ash_cd(char** args);
 int ash_help(char** args);
 int ash_exit(char** args);
 
+//confid func
+void conf_cmd_line(char* param);
+void conf_color_path(char* param);
+void conf_color_answer(char* param);
 
 char* PathAbs;
+std::string commandeLine = "$";
+std::string color_path;
+std::string Answercolor;
 
 char *builtin_str[] = {
 	"cd",
@@ -30,17 +45,38 @@ int (*builtin_fun[]) (char **args){
 	&ash_exit
 };
 
+char *conf_opt[] = {
+    "CommandLine",
+    "PathColor",
+    "AnswerColor"
+};
+
+void (*conf_func[]) (char* param){
+    &conf_cmd_line,
+    &conf_color_path,
+    &conf_color_answer
+};
 
 
+bool compString(std::string s1, std::string s2){
+    size_t i = 0;
+    if(std::size(s1)!= std::size(s2)){
+        return false;
+    }
+    while(i < std::size(s1)-1 && s1[i] == s2[i])
+        i++;
+    return i >= std::size(s1)-1;
+}
 
-void Color(char* color){
-	if(strcmp(" GREEN", color)){
+
+void Color(std::string color){
+	if(compString(color, "GREEN ")){
 		printf("\033[0;32m");
 	}
-	else if(strcmp (" BLUE", color)){
+	else if(compString(color, "BLUE ")){
 		printf("\033[0;34m");
 	}
-	else if(strcmp(" RED", color)){
+	else if(compString(color, "RED ")){
 		printf("\033[0;31m");
 	}
 }
@@ -98,7 +134,7 @@ std::vector<std::vector<std::string>> ash_splite_line(std::vector<char> line){
     return all_lines;
 }
 
-
+// builtin func
 
 int ash_cd(char** args){
 	if(args[1] == NULL){
@@ -117,7 +153,7 @@ int ash_cd(char** args){
 int ash_help(char** args){
         printf("Alexandre GRANDON's ash\n");
         printf("Type name and arguments, and hit enter .\n");
-        printf("the following are builtin\n");
+        printf("the fcommandeLineollowing are builtin\n");
         for(int i = 0; i < sizeof(builtin_str)/sizeof(char*); i++){
                 printf("   %s\n", builtin_str[i]);
         }
@@ -127,7 +163,11 @@ int ash_help(char** args){
 /*exit function*/
 int ash_exit(char** args){ exit(EXIT_SUCCESS);}
 
+// conf func
 
+void conf_cmd_line(char* param){ commandeLine = param;}
+void conf_color_path(char* param){ color_path = param;}
+void conf_color_answer(char* param){ Answercolor = param;}
 
 bool ash_launch(char** args){
 	pid_t pid, wpid;
@@ -184,8 +224,10 @@ void ash_loop(void){
     int status;
 
     do{
+        Color(color_path);
 	printf("%s\n", PathAbs);
-        printf("$");
+        resetColor();
+        std::cout << "      " << commandeLine;
         line = ash_readline();
         args = ash_splite_line(line);
 	status = ash_execute(args);
@@ -196,8 +238,23 @@ void ash_loop(void){
     }while(status);
 }
 
+
+void ash_init(void){
+    std::vector<std::string> all_lines = get_configFile();
+    std::vector<Token> tokens = split_conf_line(all_lines);
+
+    for(auto t : tokens){
+        for(int i = 0; i < sizeof(conf_opt)/sizeof(conf_opt[0]); i++){
+            if(strcmp(t.type, conf_opt[i]) == 0){
+                conf_func[i](t.val);
+            }
+        }
+    }
+}
+
+
 int main(void){
-        //char* test[] = {"ls", "-la", NULL};
+        ash_init();
 	PathAbs	= (char*)malloc(1024 * sizeof(char*));
 	getcwd(PathAbs, 1024);
     	ash_loop();

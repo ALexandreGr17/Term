@@ -3,12 +3,13 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include "config.h"
 
 typedef struct Token Token;
 
 struct Token{
 	char* type;
-	std::vector<char*> val;
+	char* val;
 };
 
 
@@ -33,26 +34,43 @@ std::vector<Token> split_conf_line(std::vector<std::string> lines){
 		Token* t = (Token*)malloc(sizeof(Token));
 		for(auto i : l){
 			if(i == ';'){
-				t->val.push_back(reinterpret_cast<char*>(buffer.data()));
+                                char* val = (char*)malloc(sizeof(char) * std::size(buffer));
+                                for(size_t j = 0; j < std::size(buffer); j++)
+                                    val[j] = buffer[j];
+
+				t->val = val;
 				buffer.clear();
+                                break;
 			}
 			else if(i == ':'){
-				t->type = reinterpret_cast<char*>(buffer.data());
+                                char* type = (char*)malloc(sizeof(char) * std::size(buffer));
+                                for(size_t j = 0; j < std::size(buffer); j++)
+                                    type[j] = buffer[j];
+
+				t->type = type;
 				buffer.clear();
 			}
 			else if(i != ' '){
 				buffer.push_back(i);
 			}
-		tokens.push_back(*t);
 		}
+                tokens.push_back(*t);
 	}
 	return tokens;
 }
 
 
+
+/*
 int main(void){
 	std::vector<std::string> all_lines = get_configFile();
-        std::cout << all_lines[0] << std::endl;
-        std::vector<Token> t = split_conf_line(all_lines);
+        for(auto l : all_lines ){
+            std::cout << l<< std::endl;
+        }
+        std::vector<Token> tokens = split_conf_line(all_lines);
+        std::cout << std::size(tokens) << std::endl;
+        for(auto t : tokens){
+            std::cout << t.type << " "  << t.val << std::endl;
+        }
 }
-
+*/

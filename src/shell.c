@@ -451,4 +451,5 @@ int main(void)
 	getcwd(pathAbs, 1024);
 	ash_loop();
     	return EXIT_SUCCESS;
-}
+r: invalid use of incomplete type ‘struct Token’
+  333 |         _M_impl._M_end_of_storage - _M_imp}
