@@ -52,5 +52,5 @@ Mkfile.old
 dkms.conf
 
 #other
-ash
-.ashrc
+#ash
+#.ashrc
