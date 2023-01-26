@@ -17,39 +17,80 @@ struct Token{
 };
 
 void ash_loop(void);
-
-//builtin func
-int ash_cd(char** args);
-int ash_help(char** args);
-int ash_exit(char** args);
-
-//confid func
-void conf_cmd_line(char* param);
-void conf_color_path(char* param);
-void conf_color_answer(char* param);
-
 char* PathAbs;
+
+
+
+/* ######################################################
+ * #                Builtin function                    #
+ * ######################################################
+*/
+
+
+char *builtin_str[] = {
+        "cd",
+        "help",
+        "exit"
+};
+
+/*Change Directory function*/
+int ash_cd(char** args){
+       if(args[1] == NULL){
+               fprintf(stderr, "ash: expected argument to \" cd \" \n");
+       }else{
+               if(chdir(args[1]) != 0){
+                       perror("ash");
+               }
+       }
+       getcwd(PathAbs, 1024);
+       return 1;
+} 
+
+/*help fuction*/
+int ash_help(char** args){
+        printf("Alexandre GRANDON's ash\n");
+        printf("Type name and arguments, and hit enter .\n");
+        printf("the fcommandeLineollowing are builtin\n");
+        for(int i = 0; i < sizeof(builtin_str)/sizeof(char*); i++){
+                printf("   %s\n", builtin_str[i]);
+        }       
+        printf("use man for infomation on other program\n");
+        return 1;
+} 
+
+/*exit function*/
+int ash_exit(char** args){ exit(EXIT_SUCCESS);}
+
+
+
+
+int (*builtin_fun[]) (char **args){
+        &ash_cd,
+        &ash_help,
+        &ash_exit
+}; 
+
+/* #####################################################
+ * #                Config Function                    #
+ * ####################################################
+*/
+
 std::string commandeLine = "$";
 std::string color_path;
 std::string Answercolor;
 
-char *builtin_str[] = {
-	"cd",
-	"help",
-	"exit"
-};
-
-int (*builtin_fun[]) (char **args){
-	&ash_cd,
-	&ash_help,
-	&ash_exit
-};
 
 char *conf_opt[] = {
     "CommandLine",
     "PathColor",
     "AnswerColor"
 };
+
+
+void conf_cmd_line(char* param){ commandeLine = param;}
+void conf_color_path(char* param){ color_path = param;}
+void conf_color_answer(char* param){ Answercolor = param;}
+
 
 void (*conf_func[]) (char* param){
     &conf_cmd_line,
@@ -85,6 +126,14 @@ void resetColor(void){
 	printf("\033[0m");
 }
 
+
+
+
+
+/* ################################################
+ * #            Lexing Parsing commande           #
+ * ################################################
+*/
 
 std::vector<char> ash_readline(){
     std::vector<char> buffer;
@@ -124,50 +173,21 @@ std::vector<std::vector<std::string>> ash_splite_line(std::vector<char> line){
         }
         i++;
     }
-//    std::cout << std::size(token) << "  " << std::size(Tokens) << std::endl;
     if(std::size(token)>=1){
         token.push_back('\0');
     	Tokens.push_back(token);
     }
     all_lines.push_back(Tokens);
- //   printf(">>%s<<\n", all_lines[0][0].c_str());
     return all_lines;
 }
 
-// builtin func
-
-int ash_cd(char** args){
-	if(args[1] == NULL){
-		fprintf(stderr, "ash: expected argument to \" cd \" \n");
-	}else{
-		if(chdir(args[1]) != 0){
-			perror("ash");
-		}
-	}
-	getcwd(PathAbs, 1024);
-	return 1;
-}
 
 
-/*help fuction*/
-int ash_help(char** args){
-        printf("Alexandre GRANDON's ash\n");
-        printf("Type name and arguments, and hit enter .\n");
-        printf("the fcommandeLineollowing are builtin\n");
-        for(int i = 0; i < sizeof(builtin_str)/sizeof(char*); i++){
-                printf("   %s\n", builtin_str[i]);
-        }
-        printf("use man for infomation on other program\n");
-        return 1;
-}
-/*exit function*/
-int ash_exit(char** args){ exit(EXIT_SUCCESS);}
+/* ##########################################
+ * #            Execute Command             #
+ * ##########################################
+*/
 
-// conf func
-
-void conf_cmd_line(char* param){ commandeLine = param;}
-void conf_color_path(char* param){ color_path = param;}
-void conf_color_answer(char* param){ Answercolor = param;}
 
 bool ash_launch(char** args){
 	pid_t pid, wpid;
@@ -216,6 +236,10 @@ bool ash_execute(std::vector<std::vector<std::string>> commande){
 }	
 
 
+/* #########################################
+ * #            Shell Function             #
+ * #########################################
+ */
 		
 
 void ash_loop(void){
