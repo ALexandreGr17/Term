@@ -278,7 +278,7 @@ void ash_init(void){
 
 
 int main(void){
-        ash_init();
+        //ash_init();
 	PathAbs	= (char*)malloc(1024 * sizeof(char*));
 	getcwd(PathAbs, 1024);
     	ash_loop();

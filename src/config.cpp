@@ -8,8 +8,8 @@
 typedef struct Token Token;
 
 struct Token{
-	char* type;
-	char* val;
+        std::string type;
+        std::string val;
 };
 
 
@@ -31,30 +31,24 @@ std::vector<Token> split_conf_line(std::vector<std::string> lines){
 	std::vector<Token> tokens;
 	for( auto l : lines){
 		std::vector<char> buffer;
-		Token* t = (Token*)malloc(sizeof(Token));
+		Token* t = (Token*)malloc(sizeof(*t));
 		for(auto i : l){
 			if(i == ';'){
-                                char* val = (char*)malloc(sizeof(char) * std::size(buffer));
-                                for(size_t j = 0; j < std::size(buffer); j++)
-                                    val[j] = buffer[j];
-
+                                std::string val(buffer.begin(), buffer.end());
 				t->val = val;
 				buffer.clear();
                                 break;
 			}
 			else if(i == ':'){
-                                char* type = (char*)malloc(sizeof(char) * std::size(buffer));
-                                for(size_t j = 0; j < std::size(buffer); j++)
-                                    type[j] = buffer[j];
-
-				t->type = type;
+                                std::string type(buffer.begin(), buffer.end());
+                                std::cout << t->type;
 				buffer.clear();
 			}
 			else if(i != ' '){
 				buffer.push_back(i);
 			}
 		}
-                tokens.push_back(*t);
+                //tokens.push_back(*t);
 	}
 	return tokens;
 }
@@ -68,9 +62,9 @@ int main(void){
             std::cout << l<< std::endl;
         }
         std::vector<Token> tokens = split_conf_line(all_lines);
-        std::cout << std::size(tokens) << std::endl;
+ //       std::cout << std::size(tokens) << std::endl;
         for(auto t : tokens){
-            std::cout << t.type << " "  << t.val << std::endl;
+//            std::cout << t.type << " "  << t.val << std::endl;
         }
 }
 */
