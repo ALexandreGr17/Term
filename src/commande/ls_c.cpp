@@ -9,16 +9,6 @@
 using namespace std;
 
 
-
-
-std::string to_string(std::filesystem::file_time_type const& ftime) {
-    std::time_t cftime = std::chrono::system_clock::to_time_t(
-        std::chrono::file_clock::to_sys(ftime));
-    std::string str = std::asctime(std::localtime(&cftime));
-    str.pop_back();  // rm the trailing '\n' put by `asctime`
-    return str;
-}
-
 string trim(string Path){
     string newPath;
     size_t i = size(Path)-1;
@@ -69,7 +59,7 @@ vector<string> ls(vector<string> args){
             }
         }
         else{
-            cout << to_string(dir_entry.last_write_time()) << file << endl;
+            cout << file << endl;
             all_files.push_back(file);
         }
     }
@@ -78,10 +68,11 @@ vector<string> ls(vector<string> args){
 }
 
 
-int main(void){
+int main(int argc, char** argv){
     vector<string> args;
     args.push_back("-a");
     args.push_back("-l");
+    args.push_back(argv[1]);
     vector<string> files = ls(args);
     cout << files[0] ;
     return 0;
