@@ -8,6 +8,7 @@
 #include "parse.h"
 #include "tokens.h"
 #include "builtin.h"
+#include "color.h"
 
 /*
  * Get config
@@ -24,17 +25,24 @@ void (*buitlins[])(char*) = {
 	pwd
 };
 
+
+void free_token_list(Token* tokens, size_t nb_tokens){
+	for(size_t i = 0; i <= nb_tokens; i++){
+		free(tokens[i].val);
+	}
+	free(tokens);
+}
+
 void ash_loop(){
 	Token* tokens = NULL;
-	size_t nb_tokens = parse_line("test", &tokens);
+	size_t nb_tokens = 0;//parse_line("test", &tokens);
 	while(1){
-		free(tokens);
 		printf("> ");
 		char* line = NULL;
 		size_t size = 0;
 		getline(&line, &size, stdin);
 		nb_tokens = parse_line(line, &tokens);
-		
+		free(line);
 		// builtin func
 		if(tokens[0].type == BUILTIN){
 			char* args = NULL;
@@ -65,12 +73,19 @@ void ash_loop(){
 			}
 
 		}
-		free(line);
+		free_token_list(tokens, nb_tokens);
 	}
 }
 
+
+
 int main(void){
+	char green[20] = {0};
+	unsigned char rgb[3] = {0, 255, 0};
+	create_color(rgb, green);
+	printf("%s", green);
 	pwd("");
+	printf("%s", COLOR_RESET);
 	ash_loop();
 	return EXIT_SUCCESS;
 }

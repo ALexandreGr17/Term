@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -Wall -Wextra -g
-SRC= ./main.c ./parse.c ./builtin.c
+SRC= ./main.c ./parse.c ./builtin.c ./color.c
 OBJ= $(SRC:.c=.o)
 EXE= ash
 

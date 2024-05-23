@@ -1,6 +1,8 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
+#include <stdlib.h>
+
 typedef enum {
 	NONE = 0,
 	BUILTIN = 1,
@@ -13,6 +15,5 @@ typedef struct {
 	char* val;
 	int index;
 } Token;
-
 
 #endif

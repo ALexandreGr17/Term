@@ -13,7 +13,9 @@ static const char* buitlins_name[] = {
 
 
 void pwd(char* args){
-	printf("%s\n", getcwd(NULL, 0));
+	char* path =getcwd(NULL, 0);
+	printf("%s\n", path);
+	free(path);
 }
 
 void help(char *args){
