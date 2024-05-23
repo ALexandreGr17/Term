@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS= -Wall -Wextra -g
 SRC= ./main.c ./parse.c ./builtin.c ./color.c
 OBJ= $(SRC:.c=.o)
-EXE= ash
+EXE= tag
 
 all: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(EXE)

@@ -19,7 +19,7 @@ void pwd(char* args){
 }
 
 void help(char *args){
-	printf("Display help message\n");
+	printf("Builtin function:\n	- cd <path>: change directory\n	- help: display this message\n	- pwd: display the actual path\n	- quit: quit the terminal\n");
 }
 
 void cd(char* args){
