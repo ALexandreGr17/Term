@@ -10,6 +10,8 @@
 #include "builtin.h"
 #include "color.h"
 
+unsigned char path_rgb[] = {0x98, 0x97, 0x1A};
+
 /*
  * Get config
  * loop -> get input
@@ -34,10 +36,14 @@ void free_token_list(Token* tokens, size_t nb_tokens){
 }
 
 void ash_loop(){
+	char path_color[20] = {0};
+	create_color(path_rgb, path_color);
 	Token* tokens = NULL;
 	size_t nb_tokens = 0;//parse_line("test", &tokens);
 	while(1){
-		printf("> ");
+		char* path = getcwd(NULL, 0);
+		printf("%s%s %s> ",path_color, path, COLOR_RESET);
+		free(path);
 		char* line = NULL;
 		size_t size = 0;
 		getline(&line, &size, stdin);
@@ -52,9 +58,18 @@ void ash_loop(){
 			buitlins[tokens[0].index](args);
 		}
 		else{
-			char** args = calloc(sizeof(char*), nb_tokens+1);
+			int nb_arg = nb_tokens + 1;
+			char* arg_sup = NULL;
+			if(strcmp(tokens[0].val, "ls") == 0){
+				nb_arg += 1;
+				arg_sup = "--color";
+			}
+			char** args = calloc(sizeof(char*), nb_arg);
 			for(int i = 0; i <= nb_tokens; i++){
 				args[i] = tokens[i].val;
+			}
+			if(arg_sup){
+				args[nb_tokens + 1] = arg_sup;
 			}
 
 			int pid = fork();
@@ -80,12 +95,6 @@ void ash_loop(){
 
 
 int main(void){
-	char green[20] = {0};
-	unsigned char rgb[3] = {0, 255, 0};
-	create_color(rgb, green);
-	printf("%s", green);
-	pwd("");
-	printf("%s", COLOR_RESET);
 	ash_loop();
 	return EXIT_SUCCESS;
 }
